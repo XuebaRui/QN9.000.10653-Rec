@@ -1,0 +1,8 @@
+".\Objects\USART.obj",
+".\Objects\IO_FUNC.obj",
+".\Objects\TIM.obj",
+".\Objects\ADC.obj",
+".\Objects\main.obj",
+".\Objects\Interrupt.obj" 
+TO ".\Objects\MASTER_CTL" 
+PRINT(".\Listings\MASTER_CTL.m51") RAMSIZE(256) 

@@ -1,0 +1,197 @@
+C51 COMPILER V9.54   INTERRUPT                                                             04/15/2019 19:17:54 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE INTERRUPT
+OBJECT MODULE PLACED IN .\Objects\Interrupt.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE USER\Interrupt.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\USER;.\START;.\Hardwa
+                    -re\IO_FUNC;.\Hardware\USART;.\Hardware\TIM;.\Hardware\ADC) DEBUG OBJECTEXTEND PRINT(.\Listings\Interrupt.lst) TABS(2) OB
+                    -JECT(.\Objects\Interrupt.obj)
+
+line level    source
+
+   1          #include "main.h"
+   2          
+   3          bit usart1_busy;
+   4          bit usart3_busy;
+   5          extern u8 Rec_Buff[8];
+   6          extern u8 Rec_Len;
+   7          extern u8 Rec_Finish;
+   8          
+   9          extern u8 Slaver_RecBuff[2];
+  10          extern u8 Slaver_RecLen;
+  11          extern u8 Slaver_RecFinish;
+  12          u8 timcnt = 0;
+  13          extern u8 rtn_flag;
+  14          /***********************************************************************************************
+  15          *函数名 ： void Uart() interrupt 4  
+  16          *函数功能描述 ：主机串口接收中断 
+  17          *函数参数 ： NONE
+  18          *函数返回值 ： void
+  19          *作者 ：WangR
+  20          *函数创建日期 ： 20190106
+  21          *函数修改日期 ： --
+  22          *修改人 ：--
+  23          *修改原因 ： --
+  24          *版本 ： 1.0
+  25          *历史版本 ： --
+  26          ***********************************************************************************************/
+  27          void Uart() interrupt 4   //串口接收解码
+  28          {
+  29   1          if (RI)
+  30   1          {
+  31   2              if(Rec_Finish == False)
+  32   2              {
+  33   3                T4T3M &= ~0x02;                 //定时器3为12T模式
+  34   3                T3L = 35536;                 //初始化计时值 
+  35   3                T3H = 35536 >> 8;
+  36   3                T4T3M |= 0x08;                  //定时器3开始计时
+  37   3                IE2 |= 0x20;                    //开定时器3中断
+  38   3              
+  39   3                Rec_Buff[Rec_Len] = SBUF;
+  40   3                Rec_Len ++; 
+  41   3                if(Rec_Len == 8)
+  42   3                {
+  43   4                  if(Rec_Buff[0] == 0xa5 && Rec_Buff[1] == 0xa5)
+  44   4                  {
+  45   5                    Rec_Len = 0;
+  46   5                    Rec_Finish = True;
+  47   5                    T4T3M &= ~0x08;
+  48   5                    IE2 &= ~0x20;   //关定时器3中断
+  49   5                    timcnt = 0; //有数据返回定时器清0，重新5S计时
+  50   5                  }
+  51   4                  else
+  52   4                  {
+  53   5                    memset(Rec_Buff , 0 , sizeof(Rec_Buff));
+C51 COMPILER V9.54   INTERRUPT                                                             04/15/2019 19:17:54 PAGE 2   
+
+  54   5                    Rec_Len = 0;
+  55   5                    Rec_Finish = False;
+  56   5                    T4T3M &= ~0x08;
+  57   5                    IE2 &= ~0x20;   //关定时器3中断
+  58   5                  }
+  59   4                }
+  60   3              }
+  61   2              RI = 0;                 //清除RI位
+  62   2          }
+  63   1          if (TI)
+  64   1          {
+  65   2              TI = 0;                 //清除TI位
+  66   2              usart1_busy = 0;
+  67   2          }
+  68   1      }
+  69          /***********************************************************************************************
+  70          *函数名 ： void Uart3() interrupt 17
+  71          *函数功能描述 ：从机串口接收中断 
+  72          *函数参数 ： NONE
+  73          *函数返回值 ： void
+  74          *作者 ：WangR
+  75          *函数创建日期 ： 20190106
+  76          *函数修改日期 ： --
+  77          *修改人 ：--
+  78          *修改原因 ： --
+  79          *版本 ： 1.0
+  80          *历史版本 ： --
+  81          ***********************************************************************************************/
+  82          
+  83          void Uart3() interrupt 17
+  84          {
+  85   1          if (S3CON & S3RI)
+  86   1          {
+  87   2            if(Slaver_RecFinish == False)
+  88   2            {
+  89   3              Slaver_RecBuff[Slaver_RecLen] = S3BUF;
+  90   3              Slaver_RecLen ++; 
+  91   3              if(Slaver_RecLen == 2 )
+  92   3              {
+  93   4                Slaver_RecFinish = True;
+  94   4                Slaver_RecLen = 0;
+  95   4              }
+  96   3            }  
+  97   2            S3CON &= ~S3RI;         //清除S3RI位
+  98   2          }
+  99   1          if (S3CON & S3TI)
+ 100   1          {
+ 101   2              S3CON &= ~S3TI;         //清除S3TI位
+ 102   2              usart3_busy = 0;
+ 103   2          }
+ 104   1      }
+ 105          /***********************************************************************************************
+ 106          *函数名 ： void t3int() interrupt 19 
+ 107          *函数功能描述 ：定时器3中断
+ 108          *函数参数 ： NONE
+ 109          *函数返回值 ： void
+ 110          *作者 ：WangR
+ 111          *函数创建日期 ： 20190106
+ 112          *函数修改日期 ： --
+ 113          *修改人 ：--
+ 114          *修改原因 ： --
+ 115          *版本 ： 1.0
+C51 COMPILER V9.54   INTERRUPT                                                             04/15/2019 19:17:54 PAGE 3   
+
+ 116          *历史版本 ： --
+ 117          ***********************************************************************************************/
+ 118          void t3int() interrupt 19           //中断入口
+ 119          {
+ 120   1        IE2 &= ~0x20;                   //若需要手动清除中断标志,可先关闭中断,此时系统会自
+             -动清除内部的中断标志
+ 121   1        T4T3M &= ~0x08;
+ 122   1        Rec_Len = 0;
+ 123   1        if(Rec_Finish == True)
+ 124   1          Rec_Finish = False; 
+ 125   1        if(Slaver_RecFinish == True)
+ 126   1        {
+ 127   2          Slaver_RecFinish = False;
+ 128   2          memset(Slaver_RecBuff , 0 , sizeof(Slaver_RecBuff));  
+ 129   2        }
+ 130   1        Slaver_RecLen = 0;
+ 131   1        memset(Rec_Buff , 0 , sizeof(Rec_Buff));  
+ 132   1      }
+ 133          
+ 134          /***********************************************************************************************
+ 135          *函数名 ： void t4int() interrupt 20    
+ 136          *函数功能描述 ：定时器4中断
+ 137          *函数参数 ： NONE
+ 138          *函数返回值 ： void
+ 139          *作者 ：WangR
+ 140          *函数创建日期 ： 20190106
+ 141          *函数修改日期 ： --
+ 142          *修改人 ：--
+ 143          *修改原因 ： --
+ 144          *版本 ： 1.0
+ 145          *历史版本 ： --
+ 146          ***********************************************************************************************/
+ 147          
+ 148          void t4int() interrupt 20           //中断入口
+ 149          {
+ 150   1        if( rtn_flag == 0)
+ 151   1        {
+ 152   2          timcnt ++;
+ 153   2          if(timcnt >= 250)
+ 154   2          {
+ 155   3            T4T3M &= ~0x80;                  //定时器4ttop计时
+ 156   3            IE2 &= ~0x40;                   //若需要手动清除中断标志,可先关闭中断,此时系统会
+             -自动清除内部的中断标志
+ 157   3            timcnt = 0;
+ 158   3            rtn_flag = 1;
+ 159   3          }
+ 160   2        }
+ 161   1        IE2 &= ~0x40;                   //若需要手动清除中断标志,可先关闭中断,此时系统会自
+             -动清除内部的中断标志
+ 162   1        IE2 |= 0x40;                    //然后再开中断即可
+ 163   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    368    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+END OF MODULE INFORMATION.
+
+C51 COMPILER V9.54   INTERRUPT                                                             04/15/2019 19:17:54 PAGE 4   
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

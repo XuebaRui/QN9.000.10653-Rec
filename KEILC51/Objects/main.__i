@@ -1,0 +1,1 @@
+"USER\main.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(.\USER;.\START;.\Hardware\IO_FUNC;.\Hardware\USART;.\Hardware\TIM;.\Hardware\ADC) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS (2) OBJECT(.\Objects\main.obj)

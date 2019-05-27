@@ -1,0 +1,54 @@
+C51 COMPILER V9.54   TIM                                                                   04/12/2019 23:13:56 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE TIM
+OBJECT MODULE PLACED IN .\Objects\TIM.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Hardware\TIM\TIM.C OPTIMIZE(8,SPEED) BROWSE INCDIR(.\USER;.\START;.\Hard
+                    -ware\IO_FUNC;.\Hardware\USART;.\Hardware\TIM;.\Hardware\ADC) DEBUG OBJECTEXTEND PRINT(.\Listings\TIM.lst) TABS(2) OBJECT
+                    -(.\Objects\TIM.obj)
+
+line level    source
+
+   1          #include "tim.h"
+   2          
+   3          /***********************************************************************************************
+   4          *函数名 ： void TimCnt_Init(void) 
+   5          *函数功能描述 ：计数寄存器初始化
+   6          *函数参数 ： cnt 计数值 计数时间为1/(sysclk/12/(65536-CNT)/2)
+   7          *函数返回值 ： void
+   8          *作者 ：WangR
+   9          *函数创建日期 ： 20190106
+  10          *函数修改日期 ： --
+  11          *修改人 ：--
+  12          *修改原因 ： --
+  13          *版本 ： 1.0
+  14          *历史版本 ： --
+  15          ***********************************************************************************************/
+  16          void TimCnt_Init(u16 cnt)  //65536-cnt = 30000 约为 38mS
+  17          {
+  18   1         u16 cnt_buf = 65536 - cnt;
+  19   1        //  T4T3M |= 0x02;                  //定时器3为1T模式
+  20   1          T4T3M &= ~0x02;                 //定时器3为12T模式
+  21   1      
+  22   1          T3L = cnt_buf;                 //初始化计时值 
+  23   1          T3H = cnt_buf >> 8;
+  24   1          
+  25   1         // T4T3M |= 0x08;                  //定时器3开始计时
+  26   1          T4T3M &= ~0x08;  //不开始计数
+  27   1         //  IE2 |= 0x20;                    //开定时器3中断
+  28   1         // EA = 1;
+  29   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     17    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

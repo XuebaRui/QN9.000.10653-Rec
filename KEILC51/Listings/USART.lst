@@ -1,0 +1,220 @@
+C51 COMPILER V9.54   USART                                                                 04/15/2019 19:17:51 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE USART
+OBJECT MODULE PLACED IN .\Objects\USART.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE Hardware\USART\USART.C OPTIMIZE(8,SPEED) BROWSE INCDIR(.\USER;.\START;.\
+                    -Hardware\IO_FUNC;.\Hardware\USART;.\Hardware\TIM;.\Hardware\ADC) DEBUG OBJECTEXTEND PRINT(.\Listings\USART.lst) TABS(2) 
+                    -OBJECT(.\Objects\USART.obj)
+
+line level    source
+
+   1          #include "usart.h"
+   2          
+   3          /***********************************************************************************************
+   4          *函数名 ： void MasterUsart_Init(u16 bps)
+   5          *函数功能描述 ：初始化主机串口 
+   6          *函数参数 ： BPS-波特率
+   7          *函数返回值 ： void
+   8          *作者 ：WangR
+   9          *函数创建日期 ： 20190106
+  10          *函数修改日期 ： --
+  11          *修改人 ：--
+  12          *修改原因 ： --
+  13          *版本 ： 1.0
+  14          *历史版本 ： --
+  15          ***********************************************************************************************/
+  16          void MasterUsart_Init(u16 bps)
+  17          {
+  18   1          ACC = P_SW1;
+  19   1          ACC &= ~(S1_S0 | S1_S1);    //S1_S0=0 S1_S1=0
+  20   1          P_SW1 = ACC;                //(P3.0/RxD, P3.1/TxD)
+  21   1          
+  22   1          SCON = 0x50;    //8位数据,可变波特率
+  23   1          AUXR |= 0x40;   //定时器1时钟为Fosc,即1T
+  24   1          AUXR &= 0xFE;   //串口1选择定时器1为波特率发生器
+  25   1          TMOD &= 0x0F;   //设定定时器1为16位自动重装方式
+  26   1          TL1 = 0xD0;   //设定定时初值
+  27   1          TH1 = 0xFF;   //设定定时初值
+  28   1          ET1 = 0;    //禁止定时器1中断
+  29   1          ES = 1;     //使能串口中断
+  30   1          TR1 = 1;    //启动定时器1
+  31   1      }
+*** WARNING C280 IN LINE 16 OF Hardware\USART\USART.C: 'bps': unreferenced local variable
+  32          /***********************************************************************************************
+  33          *函数名 ： void MasterUsart_SendByte(u8 byte)
+  34          *函数功能描述 ： 主机串口发送一个字节
+  35          *函数参数 ： byte--发送数据
+  36          *函数返回值 ： void
+  37          *作者 ：WangR
+  38          *函数创建日期 ： 20190106
+  39          *函数修改日期 ： --
+  40          *修改人 ：--
+  41          *修改原因 ： --
+  42          *版本 ： 1.0
+  43          *历史版本 ： --
+  44          ***********************************************************************************************/
+  45          void MasterUsart_SendByte(u8 byte)
+  46          {
+  47   1          while (usart1_busy);               //等待前面的数据发送完成
+  48   1          ACC = byte;                  //获取校验位P (PSW.0)
+  49   1          if (P)                      //根据P来设置校验位
+  50   1          {
+  51   2      #if (PARITYBIT == ODD_PARITY)
+                      TB8 = 0;                //设置校验位为0
+C51 COMPILER V9.54   USART                                                                 04/15/2019 19:17:51 PAGE 2   
+
+              #elif (PARITYBIT == EVEN_PARITY)
+                      TB8 = 1;                //设置校验位为1
+              #endif
+  56   2          }
+  57   1          else
+  58   1          {
+  59   2      #if (PARITYBIT == ODD_PARITY)
+                      TB8 = 1;                //设置校验位为1
+              #elif (PARITYBIT == EVEN_PARITY)
+                      TB8 = 0;                //设置校验位为0
+              #endif
+  64   2          }
+  65   1          usart1_busy = 1;
+  66   1          SBUF = ACC;                 //写数据到UART数据寄存器
+  67   1      }
+  68          /***********************************************************************************************
+  69          *函数名 ： void void MasterUsart_SendBuf(sys_para rtn_para,unsigned long int det)
+  70          *函数功能描述 ： 
+  71          *函数参数 ： 
+  72          *函数返回值 ： void
+  73          *作者 ：WangR
+  74          *函数创建日期 ： 20190115
+  75          *函数修改日期 ： --
+  76          *修改人 ：--
+  77          *修改原因 ： --
+  78          *版本 ： 1.0
+  79          *历史版本 ： --
+  80          ***********************************************************************************************/
+  81          void MasterUsart_SendBuf(sys_para rtn_para, Slaver_State rtn_state)
+  82          {
+  83   1        MasterUsart_SendByte(0xa5);
+  84   1        MasterUsart_SendByte(0xa5);
+  85   1        MasterUsart_SendByte((rtn_para.ST << 7) | (rtn_para.sss << 5) | rtn_para.CS);
+  86   1        MasterUsart_SendByte((rtn_para.AA << 5) | ((rtn_para.FS&0x0f00) >> 8));
+  87   1        MasterUsart_SendByte( rtn_para.FS & 0x00ff );
+  88   1        MasterUsart_SendByte((rtn_para.Pow_Warning << 4) | (rtn_para.PD ));
+  89   1        MasterUsart_SendByte(rtn_para.DETA);
+  90   1        MasterUsart_SendByte(rtn_state.DETB);
+  91   1        MasterUsart_SendByte(rtn_state.DETC);
+  92   1        MasterUsart_SendByte(rtn_para.DETD);
+  93   1        MasterUsart_SendByte(0x5a);
+  94   1        MasterUsart_SendByte(0x5a);
+  95   1      }
+  96          /***********************************************************************************************
+  97          *函数名 ： void SlaverUsart_Init(u16 bps)
+  98          *函数功能描述 ：初始化从机串口 
+  99          *函数参数 ： BPS-波特率
+ 100          *函数返回值 ： void
+ 101          *作者 ：WangR
+ 102          *函数创建日期 ： 20190106
+ 103          *函数修改日期 ： --
+ 104          *修改人 ：--
+ 105          *修改原因 ： --
+ 106          *版本 ： 1.0
+ 107          *历史版本 ： --
+ 108          ***********************************************************************************************/
+ 109          void SlaverUsart_Init(u16 bps)
+ 110          {
+ 111   1      
+ 112   1          P_SW2 &= ~S3_S0;            //S3_S0=0 (P0.0/RxD3, P0.1/TxD3)
+ 113   1      //  P_SW2 |= S3_S0;             //S3_S0=1 (P5.0/RxD3_2, P5.1/TxD3_2)
+ 114   1      
+C51 COMPILER V9.54   USART                                                                 04/15/2019 19:17:51 PAGE 3   
+
+ 115   1      #if (PARITYBIT == NONE_PARITY)
+ 116   1          S3CON = 0x10;               //8位可变波特率
+ 117   1      #elif (PARITYBIT == ODD_PARITY) || (PARITYBIT == EVEN_PARITY) || (PARITYBIT == MARK_PARITY)
+                  S3CON = 0x9a;               //9位可变波特率,校验位初始为1
+              #elif (PARITYBIT == SPACE_PARITY)
+                  S3CON = 0x92;               //9位可变波特率,校验位初始为0
+              #endif
+ 122   1      
+ 123   1          T2L = 0xd0;   //设置波特率重装值
+ 124   1          T2H = 0xff;
+ 125   1          AUXR |= 0x14;                //T2为1T模式, 并启动定时器2
+ 126   1          IE2 |= 0x08;                 //使能串口3中断
+ 127   1          EA = 1;
+ 128   1      
+ 129   1      }
+*** WARNING C280 IN LINE 109 OF Hardware\USART\USART.C: 'bps': unreferenced local variable
+ 130          /***********************************************************************************************
+ 131          *函数名 ： void SlaverUsart_SendByte(u8 byte)
+ 132          *函数功能描述 ： 从机串口发送一个字节
+ 133          *函数参数 ： byte--发送数据
+ 134          *函数返回值 ： void
+ 135          *作者 ：WangR
+ 136          *函数创建日期 ： 20190106
+ 137          *函数修改日期 ： --
+ 138          *修改人 ：--
+ 139          *修改原因 ： --
+ 140          *版本 ： 1.0
+ 141          *历史版本 ： --
+ 142          ***********************************************************************************************/
+ 143          void SlaverUsart_SendByte(u8 byte)
+ 144          {
+ 145   1          while (usart3_busy);               //等待前面的数据发送完成
+ 146   1          ACC = byte;                  //获取校验位P (PSW.0)
+ 147   1          if (P)                      //根据P来设置校验位
+ 148   1          {
+ 149   2      #if (PARITYBIT == ODD_PARITY)
+                      S3CON &= ~S3TB8;        //设置校验位为0
+              #elif (PARITYBIT == EVEN_PARITY)
+                      S3CON |= S3TB8;         //设置校验位为1
+              #endif
+ 154   2          }
+ 155   1          else
+ 156   1          {
+ 157   2      #if (PARITYBIT == ODD_PARITY)
+                      S3CON |= S3TB8;         //设置校验位为1
+              #elif (PARITYBIT == EVEN_PARITY)
+                      S3CON &= ~S3TB8;        //设置校验位为0
+              #endif
+ 162   2          }
+ 163   1          usart3_busy = 1;
+ 164   1          S3BUF = ACC;                //写数据到UART3数据寄存器
+ 165   1      }
+ 166          /***********************************************************************************************
+ 167          *函数名 ： void SlaverUsart_SendBuf(unsigned char Rec_Data[8])
+ 168          *函数功能描述 ： 
+ 169          *函数参数 ： 
+ 170          *函数返回值 ： void
+ 171          *作者 ：WangR
+ 172          *函数创建日期 ： 20190115
+ 173          *函数修改日期 ： --
+ 174          *修改人 ：--
+ 175          *修改原因 ： --
+C51 COMPILER V9.54   USART                                                                 04/15/2019 19:17:51 PAGE 4   
+
+ 176          *版本 ： 1.0
+ 177          *历史版本 ： --
+ 178          ***********************************************************************************************/
+ 179          void SlaverUsart_SendBuf(unsigned char Rec_Data[8])
+ 180          {
+ 181   1        unsigned char i = 0;
+ 182   1        for(i = 0 ; i < 8 ; i++)
+ 183   1        {
+ 184   2          SlaverUsart_SendByte(Rec_Data[i]);
+ 185   2        }
+ 186   1      }
+ 187          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    199    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      21
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  2 WARNING(S),  0 ERROR(S)

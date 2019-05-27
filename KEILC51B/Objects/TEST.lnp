@@ -1,0 +1,7 @@
+".\Objects\USART.obj",
+".\Objects\IO_FUNC.obj",
+".\Objects\TIM.obj",
+".\Objects\main.obj",
+".\Objects\Interrupt.obj" 
+TO ".\Objects\TEST" 
+PRINT(".\Listings\TEST.m51") RAMSIZE(256) 

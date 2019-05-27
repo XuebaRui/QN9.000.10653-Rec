@@ -1,0 +1,43 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+C:\Users\yelee\Desktop\KEILC51B\MASTER_CTL.uvproj
+Project File Date:  03/12/2019
+
+<h2>Output:</h2>
+Build target 'MASTER_CTL'
+compiling main.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SLAVERUSART_INIT?USART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SLAVERUSART_SENDBYTE?USART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?INITADC?ADC
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_ADC_FILTER?ADC
+Program Size: data=69.3 xdata=0 code=2814
+creating hex file from ".\Objects\MASTER_CTL"...
+".\Objects\MASTER_CTL" - 0 Error(s), 4 Warning(s).
+Build target 'MASTER_CTL'
+compiling USART.C...
+Hardware\USART\USART.C(16): warning C280: 'bps': unreferenced local variable
+compiling IO_FUNC.C...
+compiling TIM.C...
+compiling ADC.C...
+compiling main.c...
+compiling Interrupt.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SLAVERUSART_INIT?USART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SLAVERUSART_SENDBYTE?USART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?INITADC?ADC
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_ADC_FILTER?ADC
+Program Size: data=69.3 xdata=0 code=2814
+creating hex file from ".\Objects\MASTER_CTL"...
+".\Objects\MASTER_CTL" - 0 Error(s), 5 Warning(s).
